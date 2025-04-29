@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat API Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .input-container {
+            display: flex;
+            gap: 10px;
+        }
+        input {
+            flex: 1;
+            padding: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        .response {
+            border: 1px solid #ddd;
+            padding: 20px;
+            border-radius: 5px;
+            min-height: 100px;
+        }
+        .error {
+            color: red;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Chat API Test</h1>
+        <div class="input-container">
+            <input type="text" id="message" placeholder="Type a message..." value="hello">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+        <div>
+            <h3>Response:</h3>
+            <pre class="response" id="response">No response yet</pre>
+        </div>
+        <div id="error" class="error"></div>
+    </div>
+
+    <script>
+        async function sendMessage() {
+            const messageInput = document.getElementById('message');
+            const responseElement = document.getElementById('response');
+            const errorElement = document.getElementById('error');
+            
+            const message = messageInput.value.trim();
+            
+            if (!message) {
+                errorElement.textContent = 'Please enter a message';
+                return;
+            }
+            
+            errorElement.textContent = '';
+            responseElement.textContent = 'Loading...';
+            
+            try {
+                console.log('Sending request to server...');
+                const response = await fetch('http://localhost:5000/api/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ message })
+                });
+                
+                console.log('Response status:', response.status);
+                
+                if (!response.ok) {
+                    throw new Error(`Server responded with status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                console.log('Response data:', data);
+                
+                responseElement.textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                console.error('Error:', error);
+                errorElement.textContent = `Error: ${error.message}`;
+                responseElement.textContent = 'Failed to get response';
+            }
+        }
+    </script>
+</body>
+</html>
