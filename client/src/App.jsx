@@ -111,7 +111,9 @@ function App() {
       setError(null);
 
       // Call backend API
-      const response = await axios.post('http://localhost:4000/api/chat', { message });
+      // Use relative URL or environment variable for API endpoint
+      const API_URL = import.meta.env.VITE_API_URL || '/api';
+      const response = await axios.post(`${API_URL}/chat`, { message });
 
       // Add bot response to chat
       setMessages(prev => [...prev, { text: response.data.response, isBot: true }]);
