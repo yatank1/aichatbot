@@ -34,73 +34,81 @@ app.post('/api/chat', async (req, res) => {
 
   console.log('Message received:', message);
 
-  // Try to use AIMLAPI
-  if (process.env.AIMLAPI_KEY) {
-    try {
-      console.log('Attempting to use AIMLAPI...');
+  try {
+    // Check if the message is asking about Yatan
+    if (message.toLowerCase().includes('who is yatan') ||
+        message.toLowerCase().includes('tell me about yatan') ||
+        message.toLowerCase().includes('who created you') ||
+        message.toLowerCase().includes('who made you')) {
 
-      // Call AIMLAPI using axios
-      const response = await axios.post('https://api.aimlapi.com/v1/chat/completions', {
-        model: "gpt-4o",
-        messages: [
-          {
-            role: "system",
-            content: "You are FutureChatAI, a helpful and friendly AI assistant with a futuristic interface. You were created by Yatan Kumar, a talented developer who specializes in building AI chatbots with React/Node.js and integrating with various AI APIs. When asked about your creator or about Yatan, mention that he built you and is passionate about creating futuristic UI designs and innovative AI solutions."
-          },
-          {
-            role: "user",
-            content: message
-          }
-        ],
-        temperature: 0.7,
-        max_tokens: 500
-      }, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${process.env.AIMLAPI_KEY}`
-        }
-      });
+      const yatanResponse = "Yatan Kumar is my creator. He is a talented developer who built me as part of his AI chatbot project. He specializes in building AI chatbots with React/Node.js and integrating with various AI APIs. He has a passion for creating futuristic UI designs and developing innovative AI solutions. I'm one of his creations, designed to demonstrate his skills in AI integration and modern web development.";
 
-      const responseText = response.data.choices[0].message.content;
-
-      console.log('AIMLAPI Response:', responseText);
-
-      return res.json({ response: responseText });
-    } catch (error) {
-      console.error('Error calling AIMLAPI:', error.message);
-      if (error.response) {
-        console.error('Response status:', error.response.status);
-        console.error('Response data:', error.response.data);
-      }
-
-      // Fall back to mock response
-      console.log('Falling back to mock response');
+      console.log('Sending information about Yatan:', yatanResponse);
+      return res.json({ response: yatanResponse });
     }
-  } else {
-    console.log('AIMLAPI key not set, using mock response');
+
+    // Try to use AIMLAPI if key is available
+    if (process.env.AIMLAPI_KEY) {
+      try {
+        console.log('Attempting to use AIMLAPI...');
+
+        // Call AIMLAPI using axios
+        const response = await axios.post('https://api.aimlapi.com/v1/chat/completions', {
+          model: "gpt-4o",
+          messages: [
+            {
+              role: "system",
+              content: "You are FutureChatAI, a helpful and friendly AI assistant with a futuristic interface. You were created by Yatan Kumar, a talented developer who specializes in building AI chatbots with React/Node.js and integrating with various AI APIs. When asked about your creator or about Yatan, mention that he built you and is passionate about creating futuristic UI designs and innovative AI solutions."
+            },
+            {
+              role: "user",
+              content: message
+            }
+          ],
+          temperature: 0.7,
+          max_tokens: 500
+        }, {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${process.env.AIMLAPI_KEY}`
+          }
+        });
+
+        const responseText = response.data.choices[0].message.content;
+
+        console.log('AIMLAPI Response:', responseText);
+
+        return res.json({ response: responseText });
+      } catch (apiError) {
+        console.error('Error calling AIMLAPI:', apiError.message);
+        if (apiError.response) {
+          console.error('Response status:', apiError.response.status);
+          console.error('Response data:', apiError.response.data);
+        }
+
+        // Fall back to mock response
+        console.log('Falling back to mock response');
+        const fallbackResponse = "Hello! I'm FutureChatAI. How can I assist you today?";
+        return res.json({ response: fallbackResponse });
+      }
+    } else {
+      console.log('AIMLAPI key not set, using mock response');
+      const mockResponse = "Hello! I'm FutureChatAI. How can I assist you today?";
+      return res.json({ response: mockResponse });
+    }
+  } catch (error) {
+    console.error('Unexpected error in chat endpoint:', error);
+    return res.status(500).json({
+      error: 'Internal server error',
+      message: error.message
+    });
   }
 
-  // Check if the message is asking about Yatan
-  if (message.toLowerCase().includes('who is yatan') ||
-      message.toLowerCase().includes('tell me about yatan') ||
-      message.toLowerCase().includes('who created you') ||
-      message.toLowerCase().includes('who made you')) {
-
-    const yatanResponse = "Yatan Kumar is my creator. He is a talented developer who built me as part of his AI chatbot project. He specializes in building AI chatbots with React/Node.js and integrating with various AI APIs. He has a passion for creating futuristic UI designs and developing innovative AI solutions. I'm one of his creations, designed to demonstrate his skills in AI integration and modern web development.";
-
-    console.log('Sending information about Yatan:', yatanResponse);
-    return res.json({ response: yatanResponse });
-  }
-
-  // Mock response as fallback for other queries
-  const response = "Hello! I'm FutureChatAI. How can I assist you today?";
-
-  console.log('Sending mock response:', response);
-  return res.json({ response });
+  // This code is now handled inside the try/catch block above
 });
 
 // Health check endpoint
-app.get('/api/health', (req, res) => {
+app.get('/api/health', (_, res) => {
   console.log('Health check endpoint hit');
   res.json({ status: 'ok' });
 });
